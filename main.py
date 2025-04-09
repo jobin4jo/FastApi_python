@@ -1,7 +1,12 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 
-app= FastAPI()
-
+app= FastAPI(
+    title="NEXUS_API",
+    description="API for NEXUS",
+    version="1.0.0"
+)
+item = []
 @app.get("/products")
 def products():
     return [
@@ -23,5 +28,15 @@ def product(product_id: int):
         "name": f"Product {product_id}",
         "price": 10.0 * product_id
     }
+
+class Product(BaseModel):
+    name: str
+    price: float
+    description: str = None
+@app.post("/products/new")
+def create_product(product: Product):
+   itemreques= {"id":product.id, "name": product.name, "price": product.price}
+   item.append(itemreques)
+   return {"message": "Product created successfully", "product": itemreques.id}
 
     
