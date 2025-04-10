@@ -1,58 +1,28 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
-from uuid import UUID, uuid4
-app= FastAPI(
-    title="NEXUS_API",
-    description="API for NEXUS",
-    version="1.0.0"
-)
-item = []
-@app.get("/products")
-def products():
-    return [
-        {
-            "id": 1,
-            "name": "Product 1",
-            "price": 10.0
-        },
-        {
-            "id": 2,
-            "name": "Product 2",
-            "price": 20.0
-        }
-    ]
-# @app.get("/products/{product_id}")
-# def product(product_id: int):
-#     return {
-#         "id": product_id,
-#         "name": f"Product {product_id}",
-#         "price": 10.0 * product_id
-#     }
+import db
 
-user_router = APIRouter(prefix='/user')
+app = FastAPI()
 
-@user_router.get('')
-def get_user():
-    return {"message": "User data"}
+@app.on_event("startup")
+def startup():
+    db.execute_query('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL
+        )
+    ''')
 
-class Product(BaseModel):
-    id:int
+class User(BaseModel):
     name: str
-    price: float
-    description: str = None
-@app.post("/products/new")
-def create_product(product: Product):
-   itemreques= {"id":product.id,"name": product.name, "price": product.price,"description": product.description}
-   item.append(itemreques)
-   return {"message": "Product created successfully", "product": itemreques.get('name')}
+    email: str
 
-@app.get("/products/all")
-def get_all_products():
-    if item:
-        return item
-    else:
-       raise HTTPException(status_code=404, detail="No products found")
+@app.post("/users/")
+def create_user(user: User):
+    db.execute_query("INSERT INTO users (name, email) VALUES (?, ?)", (user.name, user.email))
+    return {"message": "User created"}
 
-
-
-app.include_router(user_router)
+@app.get("/users/")
+def get_users():
+    return {"users": db.fetch_all("SELECT * FROM users")}
