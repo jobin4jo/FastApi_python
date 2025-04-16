@@ -26,3 +26,22 @@ def create_user(user: User):
 @app.get("/users/")
 def get_users():
     return {"users": db.fetch_all("SELECT * FROM users")}
+
+@app.put("/users/{user_id}")
+def update_user(user_id: int, user: User):
+    existing_user = db.fetch_one("SELECT * FROM users WHERE id = ?", (user_id,))
+    print(existing_user)
+    if not existing_user:
+        return {"error": "User not found"}
+    if user.name == existing_user[1] and user.email == existing_user[2]:
+        return {"message": "No changes detected"}
+    db.execute_query("UPDATE users SET name = ?, email = ? WHERE id = ?", (user.name, user.email, user_id))
+    return {"message": "User updated"}
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int):
+    existing_user = db.fetch_one("SELECT * FROM users WHERE id = ?", (user_id,))
+    if not existing_user:
+        return {"error": "User not found"}
+    db.execute_query("DELETE FROM users WHERE id = ?", (user_id,))
+    return {"message": "User deleted"}

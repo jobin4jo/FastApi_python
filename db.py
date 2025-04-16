@@ -20,3 +20,10 @@ def fetch_all(query, params=()):
     rows = cursor.fetchall()
     conn.close()
     return rows
+def fetch_one (query, params=()):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(query, params)
+    row = cursor.fetchone()
+    conn.close()
+    return row
